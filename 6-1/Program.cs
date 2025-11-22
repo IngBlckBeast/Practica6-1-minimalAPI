@@ -51,7 +51,7 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityRequirement(securityRequirement);
 });
 
-// --- HealthChecks básicos ---
+// --- HealthChecks basicos ---
 builder.Services.AddHealthChecks();
 
 // 1) Auth JWT
@@ -130,7 +130,7 @@ app.MapPost("/auth/login",
     })
     .WithTags("Auth");
 
-// 5) Endpoint público
+// 5) Endpoint publico
 app.MapGet("/public/ping", () => Results.Ok("pong"))
     .AllowAnonymous()
     .WithTags("Public");
@@ -153,7 +153,7 @@ app.MapGet("/api/me", (ClaimsPrincipal user) =>
 // 7) Endpoint protegido por rol Admin
 app.MapGet("/admin/secret", () =>
 {
-    return Results.Ok("Sólo admins pueden ver esto.");
+    return Results.Ok("Solo admins pueden ver esto.");
 })
     .RequireAuthorization("AdminOnly")
     .WithTags("Admin");
@@ -175,14 +175,14 @@ app.MapGet("/environment", (IHostEnvironment env, IConfiguration cfg) =>
 app.MapHealthChecks("/health")
    .WithTags("Health");
 
-// 10) Endpoint de métricas de Prometheus
+// 10) Endpoint de mï¿½tricas de Prometheus
 app.MapMetrics("/metrics")
    .WithTags("Metrics");
 
 app.Run();
 
 
-// ======= TIPOS Y SERVICIOS (DESPUÉS de app.Run) =======
+// ======= TIPOS Y SERVICIOS (DESPUES de app.Run) =======
 
 record LoginRequest(string Username, string Password);
 record LoginResponse(string AccessToken);
@@ -206,7 +206,7 @@ public class UserStore
         AddUser("admin", "Admin123!", new[] { "Admin", "User" });
 
         // usuario normal
-        AddUser("juan", "User123!", new[] { "User" });
+        AddUser("Daniel", "User123!", new[] { "User" });
     }
 
     private void AddUser(string username, string plainPassword, string[] roles)
