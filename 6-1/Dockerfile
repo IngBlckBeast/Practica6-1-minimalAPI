@@ -1,30 +1,25 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+# Usamos la imagen oficial del SDK de .NET 8 para compilar
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER $APP_UID
+# Copiamos el csproj y restauramos dependencias
+# Nota: Como correremos esto DENTRO de la carpeta 6-1, solo copiamos el archivo local
+COPY 6-1.csproj .
+RUN dotnet restore
+
+# Copiamos todo el resto del código
+COPY . .
+
+# Publicamos la aplicación en modo Release
+RUN dotnet publish -c Release -o /app/publish
+
+# --- Etapa Final (Imagen ligera para correr la app) ---
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
 
+# Copiamos los archivos compilados desde la etapa anterior
+COPY --from=build /app/publish .
 
-# This stage is used to build the service project
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["6-1.csproj", "."]
-RUN dotnet restore "./6-1.csproj"
-COPY . .
-WORKDIR "/src/."
-RUN dotnet build "./6-1.csproj" -c $BUILD_CONFIGURATION -o /app/build
-
-# This stage is used to publish the service project to be copied to the final stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./6-1.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
+# Arrancamos la API
 ENTRYPOINT ["dotnet", "6-1.dll"]

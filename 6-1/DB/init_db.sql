@@ -39,19 +39,19 @@ GO
 
 -- Admin (Rol 1)
 INSERT INTO Users (FirstName, LastName, Phone, Age, Email, PasswordHash, RoleId)
-VALUES ('Daniel', 'Morales', '555-1111', 30, 'admin@test.com', 'HASH_DEL_ADMIN', 1);
+VALUES ('Daniel', 'Morales', '555-1111', 30, 'admin@test.com', 'admin123', 1);
 
 -- Usuario 1 (Rol 2)
 INSERT INTO Users (FirstName, LastName, Phone, Age, Email, PasswordHash, RoleId)
-VALUES ('Maritza', 'Cruz', '555-2222', 21, 'maritza@test.com', 'HASH_DE_USER', 2);
+VALUES ('Maritza', 'Cruz', '555-2222', 21, 'maritza@test.com', 'user123', 2);
 
 -- Usuario 2 (Rol 2)
 INSERT INTO Users (FirstName, LastName, Phone, Age, Email, PasswordHash, RoleId)
-VALUES ('Jose', 'Valencia', '555-3333', 22, 'jose@test.com', 'HASH_DE_USER', 2);
+VALUES ('Jose', 'Valencia', '555-3333', 22, 'jose@test.com', 'user123', 2);
 
 -- Usuario 3 (Rol 2)
 INSERT INTO Users (FirstName, LastName, Phone, Age, Email, PasswordHash, RoleId)
-VALUES ('Jaime', 'Zurita', '555-4444', 23, 'daniel@test.com', 'HASH_DE_USER', 2);
+VALUES ('Jaime', 'Zurita', '555-4444', 23, 'daniel@test.com', 'user123', 2);
 GO
 
 -- Verificar datos
