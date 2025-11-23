@@ -16,9 +16,8 @@ services:
       - "1433:1433"
     networks:
       - mi-red-auth
-    # Vamos a dejar el volumen desactivado por ahora para garantizar el arranque
-    # volumes:
-    #   - sqlserver-data:/var/opt/mssql/data
+    #volumes:
+    # - sqlserver-data:/var/opt/mssql/data
 
   # 2. Tu API de Autenticación
   api:
