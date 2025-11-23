@@ -2,7 +2,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using minimalAPI.Models;
 
-public class UserRepository
+public class UserRepository : IUserRepository
 {
     private readonly string _connectionString;
 

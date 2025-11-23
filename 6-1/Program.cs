@@ -13,6 +13,21 @@ using minimalAPI.Models;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
+// --- ZONA DE DECISIÓN DE INYECCIÓN DE DEPENDENCIAS ---
+
+if (builder.Environment.IsDevelopment())
+{
+    // Si estamos en DEV, usa la lista en memoria
+    Console.WriteLine("--> Usando Base de Datos EN MEMORIA (Development)");
+    builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+}
+else
+{
+    // Si estamos en PROD (o cualquier otro), usa SQL Server con Dapper
+    Console.WriteLine("--> Usando SQL SERVER (Production)");
+    builder.Services.AddScoped<IUserRepository, UserRepository>();
+}
+
 // --- Swagger ---
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddEndpointsApiExplorer();
@@ -108,7 +123,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // 4) Endpoint de login: POST /auth/login
-app.MapPost("/auth/login", async (LoginDto login, UserRepository userRepo, IConfiguration config) =>
+app.MapPost("/auth/login", async (LoginDto login, IUserRepository userRepo, IConfiguration config) =>
 {
     // 1. Buscar usuario en Base de Datos
     var user = await userRepo.GetUserByEmailAsync(login.Email);
