@@ -6,11 +6,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Prometheus;
 using Microsoft.OpenApi.Models;
+using Microsoft.Data.SqlClient;
+using minimalAPI.Dtos;
+using minimalAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 // --- Swagger ---
+builder.Services.AddScoped<UserRepository>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -83,13 +87,13 @@ builder.Services.AddAuthorization(options =>
 });
 
 // 3) Dependencias para usuarios en memoria
-builder.Services.AddSingleton<PasswordHasher<User>>();
-builder.Services.AddSingleton<UserStore>();
+//builder.Services.AddSingleton<PasswordHasher<User>>();
+//builder.Services.AddSingleton<UserStore>();
 
 var app = builder.Build();
 
 // --- Swagger UI ---
-if (app.Environment.IsDevelopment())
+//if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -104,31 +108,51 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // 4) Endpoint de login: POST /auth/login
-app.MapPost("/auth/login",
-    (LoginRequest request,
-     UserStore userStore,
-     PasswordHasher<User> passwordHasher,
-     IConfiguration config) =>
+app.MapPost("/auth/login", async (LoginDto login, UserRepository userRepo, IConfiguration config) =>
+{
+    // 1. Buscar usuario en Base de Datos
+    var user = await userRepo.GetUserByEmailAsync(login.Email);
+
+    if (user is null) return Results.Unauthorized();
+
+    // 2. Verificar Contraseña
+    // NOTA: Como en SQL pusimos textos falsos como 'HASH_DE_USER', 
+    // para esta prueba simple validaremos texto plano O el hash si ya implementaste BCrypt.
+    // Si en tu práctica 6-1 usabas BCrypt.Verify, úsalo. 
+    // Si no, para validar que conecta, haremos una comparación simple:
+    
+    // --> AJUSTA ESTA LÍNEA SEGÚN TU LÓGICA DE HASH DE LA SESIÓN 6 <--
+    // Ejemplo simple (inseguro, solo para testear conexión):
+    if (user.PasswordHash != login.Password) 
     {
-        var user = userStore.FindByUsername(request.Username);
+        // Si tienes BCrypt instalado sería: 
+        // if (!BCrypt.Net.BCrypt.Verify(login.Password, user.PasswordHash)) return Results.Unauthorized();
+        
+        // Por ahora, para que funcione el test rápido, retornaremos Unauthorized si no coinciden
+        return Results.Unauthorized(); 
+    }
 
-        if (user is null)
-            return Results.Unauthorized();
+    // 3. Generar Token (Usando los datos reales de la BD)
+    var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, user.Email),
+        new Claim(ClaimTypes.Role, user.RoleName), // Aquí viene "Admin" o "User" desde SQL
+        new Claim("NombreCompleto", $"{user.FirstName} {user.LastName}") // Dato extra
+    };
 
-        var result = passwordHasher.VerifyHashedPassword(
-            user,
-            user.PasswordHash,
-            request.Password
-        );
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
+    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        if (result == PasswordVerificationResult.Failed)
-            return Results.Unauthorized();
+    var token = new JwtSecurityToken(
+        issuer: config["Jwt:Issuer"],
+        audience: config["Jwt:Audience"],
+        claims: claims,
+        expires: DateTime.UtcNow.AddHours(1),
+        signingCredentials: creds
+    );
 
-        var token = JwtTokenService.GenerateJwtToken(user, config);
-
-        return Results.Ok(new LoginResponse(token));
-    })
-    .WithTags("Auth");
+    return Results.Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+});
 
 // 5) Endpoint publico
 app.MapGet("/public/ping", () => Results.Ok("pong"))
@@ -184,12 +208,12 @@ app.Run();
 
 // ======= TIPOS Y SERVICIOS (DESPUES de app.Run) =======
 
-record LoginRequest(string Username, string Password);
-record LoginResponse(string AccessToken);
+//record LoginRequest(string Username, string Password);
+//record LoginResponse(string AccessToken);
 
-public record User(Guid Id, string Username, string PasswordHash, string[] Roles);
+//public record User(Guid Id, string Username, string PasswordHash, string[] Roles);
 
-public class UserStore
+/*public class UserStore
 {
     private readonly List<User> _users = new();
     private readonly PasswordHasher<User> _passwordHasher;
@@ -255,4 +279,4 @@ public static class JwtTokenService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-}
+}*/
