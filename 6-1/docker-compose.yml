@@ -1,0 +1,61 @@
+version: '3.8'
+
+# Definición de todos los servicios (contenedores)
+services:
+  # 1. Base de Datos (SQL Server)
+  sqlserver-curso:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-curso
+    # --- AGREGA ESTA LÍNEA AQUÍ ---
+    user: root 
+    # ------------------------------
+    environment:
+      ACCEPT_EULA: 'Y'
+      MSSQL_SA_PASSWORD: 'IngBlckBeast7!' 
+    ports:
+      - "1433:1433"
+    networks:
+      - mi-red-auth
+    # Vamos a dejar el volumen desactivado por ahora para garantizar el arranque
+    # volumes:
+    #   - sqlserver-data:/var/opt/mssql/data
+
+  # 2. Tu API de Autenticación
+  api:
+    image: mi-api-6-1:v1 # La imagen que construiste con 'docker build'
+    container_name: mi-api-container-6-1
+    build:
+      context: . # Le dice a Compose que el Dockerfile está en esta carpeta
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    depends_on:
+      - sqlserver-curso # Asegura que SQL inicie antes que la API
+    environment:
+      # Inyección de configuración
+      ASPNETCORE_ENVIRONMENT: Production
+      # Cadena de conexión, usando el nombre del servicio de la BD: 'sqlserver-curso'
+      ConnectionStrings__DefaultConnection: "Server=sqlserver-curso;Database=AuthDb;User Id=sa;Password=IngBlckBeast7!;TrustServerCertificate=True;"
+    networks:
+      - mi-red-auth # Conecta a la red
+
+  # 3. Monitoreo (Uptime Kuma)
+  kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime-kuma-data:/app/data # Guarda la configuración de Kuma
+    networks:
+      - mi-red-auth # Conecta a la red
+
+# Definición de las redes y volúmenes
+networks:
+  mi-red-auth:
+    # Usamos la red que ya creaste manualmente
+    external: true 
+
+volumes:
+  sqlserver-data:
+  uptime-kuma-data:
