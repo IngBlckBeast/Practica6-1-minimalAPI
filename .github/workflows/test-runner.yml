@@ -1,0 +1,22 @@
+name: Test Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on:
+      - self-hosted
+      - linux
+      - devops-class
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Ver info del runner
+        run: |
+          echo "Runner funcionando en:"
+          uname -a
+          docker --version
+          docker compose version
