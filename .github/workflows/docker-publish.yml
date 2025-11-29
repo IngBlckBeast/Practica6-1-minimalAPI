@@ -9,7 +9,7 @@ on:
   #     - "v*.*.*"
 
 env:
-  IMAGE_NAME: Practica6-1-minimalAPI
+  IMAGE_NAME: mi-api-container-6-1
 
 jobs:
   docker-publish:
