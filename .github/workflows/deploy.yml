@@ -16,7 +16,7 @@ jobs:
     - name: Construir imagen Docker
       run: |
         # Construye la imagen usando el Dockerfile de tu proyecto
-        docker build -t mi-minimal-api .
+        docker build -t Practica6-1-minimalAPI .
 
     - name: Detener contenedor anterior (si existe)
       run: |
