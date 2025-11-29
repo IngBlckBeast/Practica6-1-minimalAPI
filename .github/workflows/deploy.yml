@@ -1,0 +1,35 @@
+name: Despliegue en Servidor Local
+
+on:
+  push:
+    branches: [ "main" ]  # Se ejecuta cada vez que subes cambios a main
+  workflow_dispatch:      # Permite ejecutarlo manualmente desde la web
+
+jobs:
+  deploy:
+    runs-on: self-hosted  
+    
+    steps:
+    - name: Obtener código
+      uses: actions/checkout@v4
+
+    - name: Construir imagen Docker
+      run: |
+        # Construye la imagen usando el Dockerfile de tu proyecto
+        docker build -t mi-minimal-api .
+
+    - name: Detener contenedor anterior (si existe)
+      run: |
+        # Si ya existe uno corriendo, lo borra para poner el nuevo
+        docker rm -f api-container || true
+
+    - name: Levantar nuevo contenedor
+      run: |
+        # Corre el contenedor en el puerto 8080
+        # IMPORTANTE: Forzamos Development para ver Swagger en una IP remota
+        docker run -d \
+          -p 8080:8080 \
+          --name api-container \
+          --restart always \
+          -e ASPNETCORE_ENVIRONMENT=Development \
+          mi-minimal-api
