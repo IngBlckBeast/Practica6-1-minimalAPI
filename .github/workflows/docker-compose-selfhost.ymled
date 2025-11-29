@@ -1,0 +1,46 @@
+name: Docker Compose - Self Hosted
+
+on:
+  # Para lanzarlo manual durante la clase
+  workflow_dispatch:
+
+  # Opcional: si quieres que también se ejecute cuando hagas push a main
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-up:
+    # runs-on:
+    #   # Etiquetas del runner especifico
+    #   - self-hosted
+    #   - linux
+    #   - X64
+
+    runs-on: self-hosted #si quieres que tome cualquier runner self-hosted sin etiquetas extra:
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Opcional: solo si tu docker-compose usa imágenes privadas de Docker Hub
+      # (por ejemplo raptor57/demoapi-6-1:latest)
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build imágenes definidas en docker-compose
+        run: |
+          docker compose -f docker-compose.yml build
+        # Si en tu agente el comando es docker-compose, usa:
+        # run: docker-compose -f docker-compose.yml build
+
+      - name: Levantar stack con docker-compose
+        run: |
+          docker compose -f docker-compose.yml up -d
+        # O bien:
+        # run: docker-compose -f docker-compose.yml up -d
+
+      - name: Ver contenedores levantados
+        run: docker ps
