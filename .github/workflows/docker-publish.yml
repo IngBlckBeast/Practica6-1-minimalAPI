@@ -1,0 +1,41 @@
+name: Despliegue en Servidor Local
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    
+    steps:
+    - name: Obtener código
+      uses: actions/checkout@v4
+
+    - name: Construir imagen Docker
+      run: |
+        # ENTRAR A LA CARPETA DEL PROYECTO (La corrección clave)
+        cd 6-1
+        # Construir la imagen
+        docker build -t mi-minimal-api .
+
+    - name: Detener contenedor anterior (si existe)
+      run: |
+        # Borra el contenedor viejo si existe, si no, continua sin error
+        docker rm -f api-container || true
+
+    - name: Levantar nuevo contenedor
+      run: |
+        # Ejecutar el contenedor nuevo
+        # 1. Usa la red 'mi-red-auth' para ver al SQL Server
+        # 2. Usa Development para que Swagger sea visible desde otra IP
+        # 3. Inyecta la cadena de conexión con la contraseña 'IngBlckBeast7!'
+        docker run -d \
+          -p 8080:8080 \
+          --name api-container \
+          --restart always \
+          --network mi-red-auth \
+          -e ASPNETCORE_ENVIRONMENT=Development \
+          -e "ConnectionStrings__DefaultConnection=Server=sqlserver-curso;Database=AuthDb;User Id=sa;Password=IngBlckBeast7!;TrustServerCertificate=True;" \
+          mi-minimal-api
