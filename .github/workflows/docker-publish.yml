@@ -13,13 +13,12 @@ jobs:
     - name: Obtener código
       uses: actions/checkout@v4
 
-    # --- CORRECCIÓN AQUÍ ---
+    # --- CAMBIO IMPORTANTE AQUÍ ---
     - name: Construir imagen Docker
+      working-directory: ./6-1  # <--- MAGIA: Nos paramos en la carpeta correcta
       run: |
-        # Usamos rutas explícitas para evitar errores de 'cd'
-        # -f : Indica dónde está el Dockerfile
-        # ./6-1 : Indica qué carpeta usar como contexto (donde está el código)
-        docker build -f 6-1/Dockerfile -t mi-minimal-api ./6-1
+        # Ahora el comando es simple y limpio, porque ya estamos dentro
+        docker build -t mi-minimal-api .
 
     - name: Detener contenedor anterior (si existe)
       run: |
@@ -27,6 +26,7 @@ jobs:
 
     - name: Levantar nuevo contenedor
       run: |
+        # Ejecutar el contenedor nuevo
         docker run -d \
           -p 8080:8080 \
           --name api-container \
